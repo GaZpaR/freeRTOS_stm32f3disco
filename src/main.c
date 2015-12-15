@@ -2,10 +2,14 @@
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "semphr.h"
+#include "queue.h"
+#include "timer.h"
 
 #include <string.h>
 
 
+//This task sends every 2 sec. message "Hello"
 void vTaskSENDREAD(void *pvParameters){
 
 	char mess[10] = "Hello=)\r\n";
@@ -18,21 +22,22 @@ void vTaskSENDREAD(void *pvParameters){
 	}
 }
 
+//Following 2 tasks blinking LED1 and LED2
 void vTaskLED1(void *pvParameters) {
         for (;;) {
-                GPIO_SetBits(GPIOE, GPIO_Pin_12);
+                GPIOE->ODR = GPIO_Pin_12;
                 vTaskDelay(1000);
-                GPIO_ResetBits(GPIOE, GPIO_Pin_12);
+                GPIOE->ODR = 0;
                 vTaskDelay(1000);
         }
 }
 
 void vTaskLED2(void *pvParameters) {
         for (;;) {
-                GPIO_SetBits(GPIOE, GPIO_Pin_11);
+                GPIOE->ODR = GPIO_Pin_11;
                 vTaskDelay(80);
-                GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-                vTaskDelay(80);
+								GPIOE->ODR = 0;
+                vTaskDelay(1000);
         }
 }
 
