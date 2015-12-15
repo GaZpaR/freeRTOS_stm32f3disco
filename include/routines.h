@@ -5,6 +5,7 @@
 #include "stm32f30x_usart.h"
 
 #include <string.h>
-
+#include <stdio.h>
 
 void init_ALL(void);
+void send_str(char str*);

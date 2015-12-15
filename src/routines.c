@@ -42,3 +42,11 @@ void init_ALL(void){
 	USART_Cmd(USART1, ENABLE);
 
 }
+
+void send_str(char str*)
+{
+  for(uint32_t i=0; i < strlen(str); i++){
+    while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
+    USART_SendData(USART1, str[i]);
+  }
+}
