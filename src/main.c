@@ -10,6 +10,11 @@
 
 QueueHandle_t blink_mess_q;
 
+typedef struct mess_bl{
+	uint8_t LED;
+	uint32_t blk_cnt;
+}mess_BL;
+
 //This task sends every 2 sec. message "Hello"
 void vTaskSENDREAD(void *pvParameters){
 
@@ -19,18 +24,27 @@ void vTaskSENDREAD(void *pvParameters){
 
 	for(;;){
 		if(uxQueueMessagesWaiting(blink_mess_q) > 0){
-			int32_t rec_blk;
+			mess_BL rec_blk;
 			xQueueReceive( blink_mess_q, &( rec_blk ), portMAX_DELAY);
-			if(rec_blk > 0){
-				char message[100];
-				snprintf(message, sizeof(message), "PD12 blinked :%d times\r\n", rec_blk);
-			} else{
-				char message[100];
-				snprintf(message, sizeof(message), "PD11 blinked :%d times\r\n", (rec_blk*(-1)));
-				send_str(message);
+
+			switch(rec_blk.LED){
+				case 11:{
+					char message[100];
+					snprintf(message, sizeof(message), "PD12 blinked :%d times\r\n", rec_blk.blk_cnt);
+					send_str(message);
+					break;
+				}
+				case 12:{
+					char message[100];
+					snprintf(message, sizeof(message), "PD11 blinked :%d times\r\n", rec_blk.blk_cnt);
+					send_str(message);
+					break;
+				}
+
+				default: break;
 			}
 		}
-		vTaskDelay(20);
+		vTaskDelay(50);
 	}
 }
 
@@ -38,31 +52,40 @@ SemaphoreHandle_t xBlinkMTX;
 //Following 2 tasks blinking LED1 and LED2
 void vTaskLED1(void *pvParameters) {
 	int32_t blink_cnt = 0;
+	mess_BL PD12;
+	PD12.LED = 12;
+	PD12.blk_cnt = 0;
         for (;;) {
 
-							GPIO_SetBits(GPIOE, GPIO_Pin_12);
+					GPIO_SetBits(GPIOE, GPIO_Pin_12);
+
               vTaskDelay(1000);
-          		GPIO_ResetBits(GPIOE, GPIO_Pin_12);
+          	GPIO_ResetBits(GPIOE, GPIO_Pin_12);
               vTaskDelay(1000);
-    	  	xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
-							blink_cnt--;
-					xQueueSend(blink_mess_q, ( void * ) &blink_cnt, portMAX_DELAY);
+              	  	xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
+              	  PD12.blk_cnt++;
+					xQueueSend(blink_mess_q, ( void * ) &PD12, portMAX_DELAY);
 					xSemaphoreGive(xBlinkMTX);
+
 
         }
 }
 
 void vTaskLED2(void *pvParameters) {
 	int32_t blink_cnt = 0;
+	mess_BL PD11;
+	PD11.LED = 11;
+	PD11.blk_cnt = 0;
         for (;;) {
 
-						GPIO_SetBits(GPIOE, GPIO_Pin_11);
+			GPIO_SetBits(GPIOE, GPIO_Pin_11);
+
 	          vTaskDelay(80);
 	          GPIO_ResetBits(GPIOE, GPIO_Pin_11);
 	          vTaskDelay(1000);
-	    xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
-	          blink_cnt++;
-			xQueueSend(blink_mess_q, ( void * ) &blink_cnt, portMAX_DELAY);
+		    xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
+		    PD11.blk_cnt++;
+			xQueueSend(blink_mess_q, ( void * ) &PD11, portMAX_DELAY);
 			xSemaphoreGive(xBlinkMTX);
 
         }
@@ -75,7 +98,7 @@ int main(void){
 	trace_puts("Hello we are initializing our periph");
 
 	//Initializing queue
-	blink_mess_q = xQueueCreate(10, sizeof(int32_t));
+	blink_mess_q = xQueueCreate(10, sizeof(mess_BL));
 
 	//Initializing mutex
 	xBlinkMTX	= xSemaphoreCreateMutex();
