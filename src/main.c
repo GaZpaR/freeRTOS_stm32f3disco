@@ -18,9 +18,9 @@ typedef struct mess_bl{
 //This task sends every 2 sec. message "Hello"
 void vTaskSENDREAD(void *pvParameters){
 
-	char mess[10] = "Hello=)\r\n";
-	snprintf(mess, sizeof(mess), "Hello=)\r\n");
-	send_str(mess);
+char mess[10] = "Hello=)\r\n";
+snprintf(mess, sizeof(mess), "Hello=)\r\n");
+send_str(mess);
 
 	for(;;){
 		if(uxQueueMessagesWaiting(blink_mess_q) > 0){
@@ -55,20 +55,22 @@ void vTaskLED1(void *pvParameters) {
 	mess_BL PD12;
 	PD12.LED = 12;
 	PD12.blk_cnt = 0;
-        for (;;) {
+	for (;;) {
 
-					GPIO_SetBits(GPIOE, GPIO_Pin_12);
+		GPIO_SetBits(GPIOE, GPIO_Pin_12);
 
-              vTaskDelay(1000);
-          	GPIO_ResetBits(GPIOE, GPIO_Pin_12);
-              vTaskDelay(1000);
-              	  	xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
-              	  PD12.blk_cnt++;
-					xQueueSend(blink_mess_q, ( void * ) &PD12, portMAX_DELAY);
-					xSemaphoreGive(xBlinkMTX);
+		vTaskDelay(1000);
+		GPIO_ResetBits(GPIOE, GPIO_Pin_12);
+		vTaskDelay(1000);
+		xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
+
+		PD12.blk_cnt++;
+
+		xQueueSend(blink_mess_q, ( void * ) &PD12, portMAX_DELAY);
+		xSemaphoreGive(xBlinkMTX);
 
 
-        }
+	}
 }
 
 void vTaskLED2(void *pvParameters) {
@@ -76,19 +78,21 @@ void vTaskLED2(void *pvParameters) {
 	mess_BL PD11;
 	PD11.LED = 11;
 	PD11.blk_cnt = 0;
-        for (;;) {
+	for (;;) {
 
-			GPIO_SetBits(GPIOE, GPIO_Pin_11);
+		GPIO_SetBits(GPIOE, GPIO_Pin_11);
 
-	          vTaskDelay(80);
-	          GPIO_ResetBits(GPIOE, GPIO_Pin_11);
-	          vTaskDelay(1000);
-		    xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
-		    PD11.blk_cnt++;
-			xQueueSend(blink_mess_q, ( void * ) &PD11, portMAX_DELAY);
-			xSemaphoreGive(xBlinkMTX);
+		vTaskDelay(80);
+		GPIO_ResetBits(GPIOE, GPIO_Pin_11);
+		vTaskDelay(1000);
+		xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
 
-        }
+		PD11.blk_cnt++;
+
+		xQueueSend(blink_mess_q, ( void * ) &PD11, portMAX_DELAY);
+		xSemaphoreGive(xBlinkMTX);
+
+	}
 }
 
 
@@ -103,12 +107,11 @@ int main(void){
 	//Initializing mutex
 	xBlinkMTX	= xSemaphoreCreateMutex();
 
-	xTaskCreate( vTaskLED1, ( signed char * ) "LED1", configMINIMAL_STACK_SIZE, NULL, 2,
-	                        ( xTaskHandle * ) NULL);
-	xTaskCreate( vTaskLED2, ( signed char * ) "LED2", configMINIMAL_STACK_SIZE, NULL, 2,
-	                        ( xTaskHandle * ) NULL);
-	xTaskCreate( vTaskSENDREAD, ( signed char * ) "DD", 2*configMINIMAL_STACK_SIZE, NULL, 2,
-		                        ( xTaskHandle * ) NULL);
+	xTaskCreate( vTaskLED1, ( signed char * ) "LED1", configMINIMAL_STACK_SIZE, NULL, 2,( xTaskHandle * ) NULL);
+
+	xTaskCreate( vTaskLED2, ( signed char * ) "LED2", configMINIMAL_STACK_SIZE, NULL, 2,( xTaskHandle * ) NULL);
+
+	xTaskCreate( vTaskSENDREAD, ( signed char * ) "DD", 2*configMINIMAL_STACK_SIZE, NULL, 2,( xTaskHandle * ) NULL);
 
 	vTaskStartScheduler();
 
