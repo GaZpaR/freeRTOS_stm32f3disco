@@ -4,7 +4,9 @@
 #include "task.h"
 #include "semphr.h"
 #include "queue.h"
-#include "timer.h"
+#include "timers.h"
+
+#include "diag/Trace.h"
 
 QueueHandle_t blink_mess_q;
 
@@ -23,7 +25,6 @@ void vTaskSENDREAD(void *pvParameters){
 				char message[100];
 				snprintf(message, sizeof(message), "PD12 blinked :%d times\r\n", rec_blk);
 			} else{
-				send_str(message);
 				char message[100];
 				snprintf(message, sizeof(message), "PD11 blinked :%d times\r\n", (rec_blk*(-1)));
 				send_str(message);
@@ -38,11 +39,12 @@ SemaphoreHandle_t xBlinkMTX;
 void vTaskLED1(void *pvParameters) {
 	int32_t blink_cnt = 0;
         for (;;) {
-					xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
-              GPIOE->ODR = GPIO_Pin_12;
+
+							GPIO_SetBits(GPIOE, GPIO_Pin_12);
               vTaskDelay(1000);
-              GPIOE->ODR = 0;
+          		GPIO_ResetBits(GPIOE, GPIO_Pin_12);
               vTaskDelay(1000);
+    	  	xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
 							blink_cnt--;
 					xQueueSend(blink_mess_q, ( void * ) &blink_cnt, portMAX_DELAY);
 					xSemaphoreGive(xBlinkMTX);
@@ -53,25 +55,24 @@ void vTaskLED1(void *pvParameters) {
 void vTaskLED2(void *pvParameters) {
 	int32_t blink_cnt = 0;
         for (;;) {
-					xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
-	          GPIOE->ODR = GPIO_Pin_11;
+
+						GPIO_SetBits(GPIOE, GPIO_Pin_11);
 	          vTaskDelay(80);
-						GPIOE->ODR = 0;
+	          GPIO_ResetBits(GPIOE, GPIO_Pin_11);
 	          vTaskDelay(1000);
-						blink_cnt++;
-					xQueueSend(blink_mess_q, ( void * ) &blink_cnt, portMAX_DELAY);
-					xSemaphoreGive(xBlinkMTX);
+	    xSemaphoreTake( xBlinkMTX, portMAX_DELAY);
+	          blink_cnt++;
+			xQueueSend(blink_mess_q, ( void * ) &blink_cnt, portMAX_DELAY);
+			xSemaphoreGive(xBlinkMTX);
 
         }
 }
-
-void Init_ALL(void);
-
 
 
 int main(void){
 
 	init_ALL();
+	trace_puts("Hello we are initializing our periph");
 
 	//Initializing queue
 	blink_mess_q = xQueueCreate(10, sizeof(int32_t));
