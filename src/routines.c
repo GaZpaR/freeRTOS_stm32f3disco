@@ -18,7 +18,7 @@ void init_ALL(void){
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
 	GPIO_Init(GPIOE, &GPIO_InitStructure);
 
 
@@ -43,7 +43,7 @@ void init_ALL(void){
 
 }
 
-void send_str(char str*)
+void send_str(char *str)
 {
   for(uint32_t i=0; i < strlen(str); i++){
     while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
